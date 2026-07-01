@@ -1,7 +1,7 @@
 # Biz Voyager
 
 <p align="center">
-  <img src="./assets/biz-voyager-hero.svg" alt="Biz Voyager hero banner" width="100%" />
+  <img src="./assets/biz-voyager-hero.png" alt="Biz Voyager hero banner" width="100%" />
 </p>
 
 <p align="center">
