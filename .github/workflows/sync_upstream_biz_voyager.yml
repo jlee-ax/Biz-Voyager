@@ -1,0 +1,88 @@
+name: sync_upstream_biz_voyager
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "7 */6 * * *"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: biz-voyager-upstream-sync
+  cancel-in-progress: false
+
+env:
+  UPSTREAM_REPOSITORY: mwithgod3952/Biz-Voyager
+  SYNC_BRANCHES: |
+    main
+    automation-state
+    codex/tree-test
+    codex/work24-automation-deploy
+
+jobs:
+  sync-upstream:
+    if: github.repository == 'jlee-ax/Biz-Voyager'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout mirror repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Sync selected upstream branches
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git remote add upstream "https://github.com/${UPSTREAM_REPOSITORY}.git"
+          git fetch --prune origin '+refs/heads/*:refs/remotes/origin/*'
+          git fetch --prune upstream '+refs/heads/*:refs/remotes/upstream/*'
+
+          changed=0
+          while IFS= read -r branch; do
+            [[ -z "$branch" ]] && continue
+
+            if ! git show-ref --verify --quiet "refs/remotes/upstream/$branch"; then
+              echo "Upstream branch $branch is absent; skipping."
+              continue
+            fi
+
+            if git show-ref --verify --quiet "refs/remotes/origin/$branch"; then
+              git switch -C "$branch" "origin/$branch"
+            else
+              git switch -C "$branch" "upstream/$branch"
+              git push origin "HEAD:$branch"
+              changed=1
+              continue
+            fi
+
+            if git merge-base --is-ancestor "upstream/$branch" HEAD; then
+              echo "$branch is already at or ahead of upstream."
+              continue
+            fi
+
+            if git merge-base --is-ancestor HEAD "upstream/$branch"; then
+              git reset --hard "upstream/$branch"
+              git push origin "HEAD:$branch"
+              changed=1
+              continue
+            fi
+
+            if [[ "$branch" == "main" ]]; then
+              git merge --no-edit "upstream/$branch"
+              git push origin "HEAD:$branch"
+              changed=1
+              continue
+            fi
+
+            echo "::error::Branch $branch diverged from upstream; refusing to force-push."
+            exit 1
+          done <<< "$SYNC_BRANCHES"
+
+          if [[ "$changed" -eq 0 ]]; then
+            echo "No upstream updates to sync."
+          fi
