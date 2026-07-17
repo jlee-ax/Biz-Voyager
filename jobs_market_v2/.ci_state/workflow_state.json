@@ -1,9 +1,9 @@
 {
-  "updated_at": "2026-07-16T18:19:33.874917+00:00",
-  "consecutive_failures": 53,
+  "updated_at": "2026-07-17T07:36:36.904180+00:00",
+  "consecutive_failures": 54,
   "last_result": "failure",
   "hold_reason": "",
-  "run_url": "https://github.com/jlee-ax/Biz-Voyager/actions/runs/29523439745",
+  "run_url": "https://github.com/jlee-ax/Biz-Voyager/actions/runs/29563597891",
   "automation_status": {
     "timestamp": "2026-05-03T15:56:10+09:00",
     "last_successful_run_id": "promote-staging-20260503155346479135-f5984a68",
